@@ -1,0 +1,335 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>E505</title><meta name="generator" content="MATLAB 9.3"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2019-01-20"><meta name="DC.source" content="E505.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#2">Correspondencia entre puntos</a></li><li><a href="#3">Plano epipolar</a></li></ul></div><pre class="codeinput">clear <span class="string">all</span>
+close <span class="string">all</span>
+</pre><h2 id="2">Correspondencia entre puntos</h2><pre class="codeinput">Ic1=double(imread(<span class="string">'Catedral1.JPG'</span>));
+Ic2=double(imread(<span class="string">'Catedral2.JPG'</span>));
+
+Ic2=Ic2(1:size(Ic1,1),1:size(Ic1,2),:);
+
+[Ny,Mx]=size(Ic1(:,:,1));
+
+tam=floor(round([Ny,Mx]./20)/2);
+
+Ic1bn=rgb2gray(uint8(Ic1));
+Ic2bn=rgb2gray(uint8(Ic2));
+
+figure
+imshow(Ic1bn);
+figure
+imshow(Ic2bn);
+
+<span class="comment">% Detector de puntos singulares</span>
+
+[Ix, Iy] = imgradientxy(Ic1bn,<span class="string">'prewitt'</span>);
+
+figure;
+imshowpair(Ix, Iy, <span class="string">'montage'</span>);
+title(<span class="string">'Gradientes direccionales: Direccion x, Gx (Izq), Direccion y, Gy (Der), metodo Prewitt'</span>)
+axis <span class="string">off</span>;
+
+Autoval1=zeros(Ny,Mx);
+Autoval2=zeros(Ny,Mx);
+
+<span class="keyword">for</span> i=1:Ny
+    <span class="keyword">for</span> j=1:Mx
+        <span class="comment">% Montamos el tensor por cada punto de la imagen</span>
+        eigval=eig([Ix(i,j)^2 Ix(i,j)*Iy(i,j);Iy(i,j)*Ix(i,j) Iy(i,j)^2]);
+        Autoval1(i,j)=eigval(1);
+        Autoval2(i,j)=eigval(2);
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+
+<span class="comment">% buscamos puntos singulares</span>
+
+[fila2,columna2]=find(Autoval2&gt;1e5);
+[fila1,columna1]=find(Autoval1&gt;1e5);
+
+<span class="keyword">if</span> isempty(fila2)&amp;&amp;isempty(fila1)
+    error(<span class="string">'No existen puntos singulares'</span>);
+<span class="keyword">end</span>
+
+fila=[fila1;fila2];
+columna=[columna1;columna2];
+
+figure
+imshow(Ic1bn);
+hold <span class="string">on</span>
+plot(columna,fila,<span class="string">'or'</span>);
+
+<span class="comment">% Calculo de correspondencia entre imagenes</span>
+Corresp=[];
+npsing=length(fila);
+np=4;
+<span class="keyword">for</span> i=1:20
+   <span class="comment">% Para cada punto singular</span>
+   <span class="comment">% Calculo SD para un entorno de np cuadrados R en la imagen Ic2 y</span>
+   <span class="comment">% me quedo con el minimo</span>
+  vsolmin=Inf;
+  vsolposmin=[];
+  <span class="keyword">for</span> j=fila(i)-np:fila(i)+np
+      <span class="keyword">for</span> k=columna(i)-np:columna(i)+np
+        <span class="comment">% Calculamos SD</span>
+        <span class="keyword">if</span> (j&gt;=1)&amp;&amp;(k&gt;=1)
+        vsol=CalculaSD(Ic1bn,Ic2bn,tam,[fila(i),columna(i)],[j,k]);
+        <span class="keyword">if</span> vsol&lt;vsolmin
+            vsolmin=vsol;
+            vsolposmin=[j,k];
+        <span class="keyword">end</span>
+        <span class="keyword">end</span>
+      <span class="keyword">end</span>
+  <span class="keyword">end</span>
+
+  Corresp=[Corresp;fila(i),columna(i),vsolposmin(1),vsolposmin(2)];
+
+<span class="keyword">end</span>
+
+point=30;
+figure(11)
+subplot(1,2,1)
+imshow(Ic1bn);
+hold <span class="string">on</span>
+plot(Corresp(point,2),Corresp(point,1),<span class="string">'or'</span>);
+subplot(1,2,2)
+imshow(Ic2bn);
+hold <span class="string">on</span>
+plot(Corresp(point,4),Corresp(point,3),<span class="string">'xr'</span>);
+
+<span class="comment">% Funcion Corner</span>
+
+meth2=<span class="string">'MinimumEigenvalue'</span>;
+C = corner(Ic1bn);
+figure;
+imshow(Ic1bn);
+hold <span class="string">on</span>
+plot(C(:,1), C(:,2), <span class="string">'r*'</span>);
+
+C = corner(Ic1bn,meth2);
+figure;
+imshow(Ic1bn);
+hold <span class="string">on</span>
+plot(C(:,1), C(:,2), <span class="string">'r*'</span>);
+</pre><pre class="codeoutput error">Index exceeds matrix dimensions.
+
+Error in E505 (line 93)
+plot(Corresp(point,2),Corresp(point,1),'or');
+</pre><h2 id="3">Plano epipolar</h2><pre class="codeinput"><span class="keyword">for</span> point=1:100
+
+x_1=Corresp(point,2);
+x_2=Corresp(point,3);
+
+<span class="comment">%Disparidad</span>
+d = x_1-x_2;
+
+<span class="comment">%Supongo distancia entre planos b=10;</span>
+b=100;
+<span class="comment">%Distancia focal f=3</span>
+f=3;
+
+z(point)=(f*b)./d;
+
+<span class="keyword">end</span>
+plot(z)
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2017b</a><br></p></div><!--
+##### SOURCE BEGIN #####
+clear all
+close all
+
+%% Correspondencia entre puntos
+
+Ic1=double(imread('Catedral1.JPG'));
+Ic2=double(imread('Catedral2.JPG'));
+
+Ic2=Ic2(1:size(Ic1,1),1:size(Ic1,2),:);
+
+[Ny,Mx]=size(Ic1(:,:,1));
+
+tam=floor(round([Ny,Mx]./20)/2);
+
+Ic1bn=rgb2gray(uint8(Ic1));
+Ic2bn=rgb2gray(uint8(Ic2));
+
+figure
+imshow(Ic1bn);
+figure
+imshow(Ic2bn);
+
+% Detector de puntos singulares
+
+[Ix, Iy] = imgradientxy(Ic1bn,'prewitt');
+
+figure; 
+imshowpair(Ix, Iy, 'montage');
+title('Gradientes direccionales: Direccion x, Gx (Izq), Direccion y, Gy (Der), metodo Prewitt')
+axis off;
+
+Autoval1=zeros(Ny,Mx);
+Autoval2=zeros(Ny,Mx);
+
+for i=1:Ny
+    for j=1:Mx
+        % Montamos el tensor por cada punto de la imagen
+        eigval=eig([Ix(i,j)^2 Ix(i,j)*Iy(i,j);Iy(i,j)*Ix(i,j) Iy(i,j)^2]);
+        Autoval1(i,j)=eigval(1);
+        Autoval2(i,j)=eigval(2);
+    end
+end
+
+% buscamos puntos singulares
+
+[fila2,columna2]=find(Autoval2>1e5);
+[fila1,columna1]=find(Autoval1>1e5);
+
+if isempty(fila2)&&isempty(fila1)
+    error('No existen puntos singulares');
+end
+
+fila=[fila1;fila2];
+columna=[columna1;columna2];
+
+figure
+imshow(Ic1bn);
+hold on
+plot(columna,fila,'or');
+
+% Calculo de correspondencia entre imagenes
+Corresp=[];
+npsing=length(fila);
+np=4;
+for i=1:20
+   % Para cada punto singular
+   % Calculo SD para un entorno de np cuadrados R en la imagen Ic2 y 
+   % me quedo con el minimo
+  vsolmin=Inf; 
+  vsolposmin=[];
+  for j=fila(i)-np:fila(i)+np
+      for k=columna(i)-np:columna(i)+np
+        % Calculamos SD
+        if (j>=1)&&(k>=1)
+        vsol=CalculaSD(Ic1bn,Ic2bn,tam,[fila(i),columna(i)],[j,k]);
+        if vsol<vsolmin
+            vsolmin=vsol;
+            vsolposmin=[j,k];
+        end
+        end
+      end
+  end
+   
+  Corresp=[Corresp;fila(i),columna(i),vsolposmin(1),vsolposmin(2)];
+   
+end
+
+point=30;
+figure(11)
+subplot(1,2,1)
+imshow(Ic1bn);
+hold on
+plot(Corresp(point,2),Corresp(point,1),'or');
+subplot(1,2,2)
+imshow(Ic2bn);
+hold on
+plot(Corresp(point,4),Corresp(point,3),'xr');
+
+% Funcion Corner
+
+meth2='MinimumEigenvalue';
+C = corner(Ic1bn);
+figure;
+imshow(Ic1bn);
+hold on
+plot(C(:,1), C(:,2), 'r*');
+
+C = corner(Ic1bn,meth2);
+figure;
+imshow(Ic1bn);
+hold on
+plot(C(:,1), C(:,2), 'r*');
+
+%% Plano epipolar
+
+for point=1:100
+
+x_1=Corresp(point,2);
+x_2=Corresp(point,3);
+
+%Disparidad
+d = x_1-x_2;
+
+%Supongo distancia entre planos b=10;
+b=100;
+%Distancia focal f=3
+f=3;
+
+z(point)=(f*b)./d;
+
+end
+plot(z)
+
+##### SOURCE END #####
+--></body></html>
