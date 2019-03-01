@@ -25,7 +25,7 @@
       
       
 ## 4. Visión Estéreo
-      - Calculo autover-osimilitud
+      - Calculo autoverosimilitud
       - Calculo correspondencia entre imágenes
       - Calculo profundidad usando planos epipolares
       - Anexo. Color virtual gracias a imagen infrarroja
